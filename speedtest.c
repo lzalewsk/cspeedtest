@@ -11,11 +11,13 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define SPEEDTEST_DOMAIN_NAME "www.speedtest.net"
-#define CONFIG_REQUEST_URL "speedtest-config.php"
+//#define SPEEDTEST_DOMAIN_NAME "www.speedtest.net"
+//#define CONFIG_REQUEST_URL "speedtest-config.php"
 
-#define SPEEDTEST_SERVERS_DOMAIN_NAME "c.speedtest.net"
-#define SERVERS_LOCATION_REQUEST_URL "speedtest-servers-static.php?"
+//#define SPEEDTEST_SERVERS_DOMAIN_NAME "c.speedtest.net"
+#define SPEEDTEST_SERVERS_DOMAIN_NAME "speedtest.pluslab.pl"
+//#define SERVERS_LOCATION_REQUEST_URL "speedtest-servers-static.php?"
+#define SERVERS_LOCATION_REQUEST_URL "servers.xml"
 
 #define FILE_DIRECTORY_PATH "/tmp/"
 #define NEAREST_SERVERS_NUM 5
@@ -194,6 +196,7 @@ int get_nearest_server(double lat_c, double lon_c, server_data_t *nearest_server
     sprintf(filePath, "%s%s", FILE_DIRECTORY_PATH, SERVERS_LOCATION_REQUEST_URL);
 
     if((fp=fopen(filePath, "r"))!=NULL) {
+    	printf("FILE: !=NULL GO\n");
         while(fgets(line, sizeof(line)-1, fp)!=NULL) {
             if(!strncmp(line, "<server", 7)) {
                 //ex: <server url="http://88.84.191.230/speedtest/upload.php" lat="70.0733" lon="29.7497" name="Vadso" country="Norway" cc="NO" sponsor="Varanger KraftUtvikling AS" id="4600" host="88.84.191.230:8080"/>
@@ -356,7 +359,8 @@ void *calculate_ul_speed_thread() {
         //ul_speed = (double)total_ul_size/1024/1024/duration*8;
         ul_speed = (double)total_ul_size/1000/1000/duration*8;
         if(duration>0) {
-            printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bUpload speed: %0.2lf Mbps", ul_speed);
+            //printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bUpload speed: %0.2lf Mbps", ul_speed);
+            printf("Upload speed: %0.2lf Mbps\n", ul_speed);
             fflush(stdout);
         }
         usleep(500000);
@@ -367,7 +371,8 @@ void *calculate_ul_speed_thread() {
             //ul_speed = (double)total_ul_size/1024/1024/duration*8;
             ul_speed = (double)total_ul_size/1000/1000/duration*8;
             if(duration) {
-                printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bUpload speed: %0.2lf Mbps", ul_speed);
+                //printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bUpload speed: %0.2lf Mbps", ul_speed);
+                printf("Upload speed: %0.2lf Mbps\n", ul_speed);
                 fflush(stdout);
             }
             break;
@@ -384,7 +389,8 @@ void *calculate_dl_speed_thread() {
         //dl_speed = (double)total_dl_size/1024/1024/duration*8;
         dl_speed = (double)total_dl_size/1000/1000/duration*8;
         if(duration>0) {
-            printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bDownload speed: %0.2lf Mbps", dl_speed);
+            //printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bDownload speed: %0.2lf Mbps", dl_speed);
+            printf("Download speed: %0.2lf Mbps\n", dl_speed);
             fflush(stdout);
         }
         usleep(500000);
@@ -395,7 +401,8 @@ void *calculate_dl_speed_thread() {
             //dl_speed = (double)total_dl_size/1024/1024/duration*8;
             dl_speed = (double)total_dl_size/1000/1000/duration*8;
             if(duration>0) {
-                printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bDownload speed: %0.2lf Mbps", dl_speed);
+                //printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bDownload speed: %0.2lf Mbps", dl_speed);
+                printf("Download speed: %0.2lf Mbps\n", dl_speed);
                 fflush(stdout);
             }   
             break;
@@ -618,28 +625,36 @@ int main() {
         memset(&nearest_servers[i], 0, sizeof(server_data_t));
     }
 
-    if(get_ipv4_addr(SPEEDTEST_DOMAIN_NAME, &servinfo)) {
+/*    if(get_ipv4_addr(SPEEDTEST_DOMAIN_NAME, &servinfo)) {
         if(!get_http_file(&servinfo, SPEEDTEST_DOMAIN_NAME, CONFIG_REQUEST_URL, CONFIG_REQUEST_URL)) {
             printf("Can't get your IP address information.\n");
             return 0;
         }
     }
+*/
+
     if(get_ipv4_addr(SPEEDTEST_SERVERS_DOMAIN_NAME, &servinfo)) {
         if(!get_http_file(&servinfo, SPEEDTEST_SERVERS_DOMAIN_NAME, SERVERS_LOCATION_REQUEST_URL, SERVERS_LOCATION_REQUEST_URL)) {
-            printf("Can't get servers list.\n");
+            printf("get_http_file: Can't get servers list.\n");
             return 0;
         }
     }
 
-    get_ip_address_position(CONFIG_REQUEST_URL, &client_data);
+    //get_ip_address_position(CONFIG_REQUEST_URL, &client_data);
+    strncpy(client_data.ipAddr, "1.1.1.1", sizeof("1.1.1.1")); //pls put device IP 
+    client_data.latitude = 52.2215; //fix location
+    client_data.longitude = 20.9818; //fix location
+    strncpy(client_data.isp, "Polkomtel", sizeof("Polkomtel"));
+ 
     printf("============================================\n");
     printf("Your IP Address : %s\n", client_data.ipAddr);
     printf("Your IP Location: %0.4lf, %0.4lf\n", client_data.latitude, client_data.longitude);
     printf("Your ISP        : %s\n", client_data.isp);
     printf("============================================\n");
+    
 
     if(get_nearest_server(client_data.latitude, client_data.longitude, nearest_servers)==0) {
-        printf("Can't get server list.\n"); 
+        printf("get_nearest_server: Can't get server list.\n"); 
         return 0;
     }
     if((best_server_index = get_best_server(nearest_servers))!=-1) {
